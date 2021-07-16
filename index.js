@@ -298,6 +298,7 @@ class DaikinCloudController extends EventEmitter {
      * @public
      */
      async login(userName, password) {
+<<<<<<< HEAD
         Proxy = Proxy || require('./lib/proxy');
 
         // Initiate proxy without starting it
@@ -315,12 +316,15 @@ class DaikinCloudController extends EventEmitter {
             this.proxy = new Proxy(this.openIdClient, proxyOptions);
         }
 
+=======
+>>>>>>> 869673f (Converted fetch to got library)
         let cookies;
         let location;
         let login_token;
 
         // Extract csrf state cookies
         let csrfStateCookie;
+<<<<<<< HEAD
         try {
             const response = await got(this.proxy._generateInitialUrl(), {
                 followRedirect: false,
@@ -337,11 +341,28 @@ class DaikinCloudController extends EventEmitter {
         
         // Extract SAML Context
         let samlContext;
+=======
+        await got(this.proxy._generateInitialUrl(), {
+            followRedirect: false,
+
+        }).then(response => {
+            let cookies = response.headers['set-cookie'];
+            csrfStateCookie = cookies[1].split(';')[0].trim() + "; "
+                + cookies[2].split(';')[0].trim();
+            location = response.headers['location']});
+        
+        // Extract SAML Context
+        let samlContext;
+        //await fetch(location, { "redirect": "manual" })
+        await got(location, { followRedirect: false })
+            .then(response => location = response.headers['location']);
+>>>>>>> 869673f (Converted fetch to got library)
 
         try {
             const response = await got(location, { followRedirect: false })
             location = response.headers['location'];
 
+<<<<<<< HEAD
             let regex = /samlContext=([^&]+)/g;
             let match = regex.exec(location);
             samlContext = match[1];
@@ -376,6 +397,27 @@ class DaikinCloudController extends EventEmitter {
         } catch (err) {
             return Promise.reject("Impossible to extract SSO cookies: " + err);
         }
+=======
+        // Extract API version
+        let version;
+        await got("https://cdns.gigya.com/js/gigya.js", {
+            searchParams: {'apiKey': '3_xRB3jaQ62bVjqXU1omaEsPDVYC0Twi1zfq1zHPu_5HFT0zWkDvZJS97Yw1loJnTm'}
+        }).text()
+        .then(body => {
+            let regex = /"(\d+-\d-\d+)"/g
+            let match = regex.exec(body);
+            version = match[1]});
+        
+        // Extract the cookies used for the Single Sign On
+        let ssoCookies;
+        await got("https://cdc.daikin.eu/accounts.webSdkBootstrap", {
+            searchParams: {
+                "apiKey": "3_xRB3jaQ62bVjqXU1omaEsPDVYC0Twi1zfq1zHPu_5HFT0zWkDvZJS97Yw1loJnTm",
+                "sdk": "js_latest",
+                "format": "json"}
+        }).then(response => 
+            ssoCookies = response.headers['set-cookie']);
+>>>>>>> 869673f (Converted fetch to got library)
 
         // Login
         cookies = ssoCookies[0].split(';')[0].trim() + "; "
@@ -386,6 +428,7 @@ class DaikinCloudController extends EventEmitter {
             + "gig_canary_ver_3_QebFXhxEWDc8JhJdBWmvUd1e0AaWJCISbqe4QIHrk_KzNVJFJ4xsJ2UZbl8OIIFY=" + version + "; "
             + "apiDomain_3_QebFXhxEWDc8JhJdBWmvUd1e0AaWJCISbqe4QIHrk_KzNVJFJ4xsJ2UZbl8OIIFY=cdc.daikin.eu; ";
         
+<<<<<<< HEAD
         try {
             const json = await got("https://cdc.daikin.eu/accounts.login", {
                 "headers": {
@@ -416,6 +459,29 @@ class DaikinCloudController extends EventEmitter {
         } catch (err) {
             return Promise.reject("Login failed: " + err);
         }
+=======
+        await got("https://cdc.daikin.eu/accounts.login", {
+            "headers": {
+                "content-type": "application/x-www-form-urlencoded",
+                "cookie": cookies},
+            searchParams: {
+                "loginID": userName,
+                "password": password,
+                "sessionExpiration":"31536000",
+                "targetEnv":"jssdk",
+                "include": "profile,",
+                "loginMode": "standard",
+                "riskContext": '{"b0":7527,"b2":4,"b5":1',
+                "APIKey": "3_xRB3jaQ62bVjqXU1omaEsPDVYC0Twi1zfq1zHPu_5HFT0zWkDvZJS97Yw1loJnTm",
+                "sdk": "js_latest",
+                "authMode": "cookie",
+                "pageURL": "https://my.daikin.eu/content/daikinid-cdc-saml/en/login.html?samlContext="+samlContext,
+                "sdkBuild": "12208",
+                "format": "json"},
+            "method": "POST",
+        }).json()
+        .then(json => login_token = json.sessionInfo.login_token); 
+>>>>>>> 869673f (Converted fetch to got library)
         
         let date = new Date();
         date = new Date(date.setTime( date.getTime() + 3600000 ));
@@ -428,6 +494,7 @@ class DaikinCloudController extends EventEmitter {
             + "gig_loginToken_3_QebFXhxEWDc8JhJdBWmvUd1e0AaWJCISbqe4QIHrk_KzNVJFJ4xsJ2UZbl8OIIFY_exp=" + date.getTime() + "; "
             + "gig_loginToken_3_QebFXhxEWDc8JhJdBWmvUd1e0AaWJCISbqe4QIHrk_KzNVJFJ4xsJ2UZbl8OIIFY_visited=%2C3_xRB3jaQ62bVjqXU1omaEsPDVYC0Twi1zfq1zHPu_5HFT0zWkDvZJS97Yw1loJnTm;";
         
+<<<<<<< HEAD
         try {
             const body = await got("https://cdc.daikin.eu/saml/v2.0/3_xRB3jaQ62bVjqXU1omaEsPDVYC0Twi1zfq1zHPu_5HFT0zWkDvZJS97Yw1loJnTm/idp/sso/continue", {
                 searchParams: {
@@ -436,14 +503,27 @@ class DaikinCloudController extends EventEmitter {
                 headers: { "cookie": cookies}
             }).text();
             
+=======
+        await got("https://cdc.daikin.eu/saml/v2.0/3_xRB3jaQ62bVjqXU1omaEsPDVYC0Twi1zfq1zHPu_5HFT0zWkDvZJS97Yw1loJnTm/idp/sso/continue", {
+            searchParams: {
+                "samlContext": samlContext,
+                "loginToken": login_token},
+            headers: { "cookie": cookies}
+        }).text()
+        .then(body => {
+>>>>>>> 869673f (Converted fetch to got library)
             let regex = /value="([^"]+=*)"/g;
             let matches = regex.exec(body);
             samlResponse = matches[1];
             matches = regex.exec(body);
             relayState = matches[1];
+<<<<<<< HEAD
         } catch (err) {
             return Promise.reject("Authentication on SAML Identity Provider failed: " + err);
         }
+=======
+        }); 
+>>>>>>> 869673f (Converted fetch to got library)
 
         // Fetch the daikinunified URL
         let daikinunified;
@@ -451,6 +531,7 @@ class DaikinCloudController extends EventEmitter {
             "SAMLResponse": samlResponse,
             "RelayState": relayState});
 
+<<<<<<< HEAD
         try {
             const response = await got.post("https://daikin-unicloud-prod.auth.eu-west-1.amazoncognito.com/saml2/idpresponse", {
                 headers: {
@@ -474,6 +555,16 @@ class DaikinCloudController extends EventEmitter {
          * @event DaikinCloudController#token_update
          * @property {TokenSet} Instance of openid-client-TokenSet with updated tokens
          **/
+=======
+        await got.post("https://daikin-unicloud-prod.auth.eu-west-1.amazoncognito.com/saml2/idpresponse", {
+            headers: {
+                "content-type": "application/x-www-form-urlencoded",
+                "cookie": csrfStateCookie
+            },
+            body: params.toString(),
+            followRedirect: false
+        }).then(response => daikinunified = response.headers['location']);
+>>>>>>> 869673f (Converted fetch to got library)
 
          this.emit('token_update', this.tokenSet);
          return this.tokenSet;
